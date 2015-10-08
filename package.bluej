@@ -9,8 +9,13 @@ objectbench.height=100
 objectbench.width=353
 package.editor.height=400
 package.editor.width=560
+<<<<<<< HEAD
 package.editor.x=473
 package.editor.y=140
+=======
+package.editor.x=462
+package.editor.y=113
+>>>>>>> gh-pages
 package.numDependencies=2
 package.numTargets=2
 package.showExtends=true
