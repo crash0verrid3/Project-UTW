@@ -33,7 +33,6 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static SimpleSwingBrowser browser;
     
-    private static jProxy jp;
  
     public SimpleSwingBrowser() {
         super();
@@ -44,7 +43,6 @@ public class SimpleSwingBrowser extends JFrame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
-                jp.closeSocket();
                 dispose();
                 System.exit(0);
             }
@@ -235,11 +233,8 @@ public class SimpleSwingBrowser extends JFrame {
             getJSSupport();
         } else if(attrib.toLowerCase().equals("iframes")){
             getIframeSupport();
-<<<<<<< HEAD
-=======
         } else if(attrib.toLowerCase().equals("project")){
             browser.loadURL("http://crash0verrid3.github.io/Project-UTW/");
->>>>>>> gh-pages
         } else if(attrib.toLowerCase().equals("welcome")){
             engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser</h1>\n<h3><strong><a href=\"https://duckduckgo.com/\">Click here</a></strong> to search the web.</h3>\n<p>&nbsp;</p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just type \"<strong><em>get: tutorial</em></strong>\" into the URL bar.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
         } else if(attrib.toLowerCase().equals("tutorial")){
@@ -257,8 +252,11 @@ public class SimpleSwingBrowser extends JFrame {
     }
     
    private static void setProxy(String host){
-       System.setProperty("java.net.useSystemProxies", "false");
+                System.setProperty("java.net.useSystemProxies", "false");
+                System.setProperty("http.proxySet", "true");
        try{
+            System.setProperty("java.net.useSystemProxies", "false");
+            System.setProperty("http.proxySet", "true");
             String[] h2 = host.split(":");
             String s1 = h2[0].trim();
             String s2 = h2[1].trim();
@@ -266,22 +264,32 @@ public class SimpleSwingBrowser extends JFrame {
             JOptionPane.showMessageDialog(null, "You are now using the HTTP proxy "+s1+":"+s2);
         } catch(java.lang.IndexOutOfBoundsException e){
             if(host.toLowerCase().equals("none")){
-               setProxy("127.0.0.1", "2997");
-               JOptionPane.showMessageDialog(null, "You are not using any proxy.");
+                System.setProperty("http.proxySet", "false");
+                System.setProperty("java.net.useSystemProxies", "false");
+                setProxy("", "");
+                JOptionPane.showMessageDialog(null, "You are not using any proxy.");
             }else if(host.toLowerCase().equals("default")){
-               String h = "46.216.1.99";
-               String p = "3128";
-               setProxy(h, p);
-               JOptionPane.showMessageDialog(null, "You are using the HTTP proxy "+h+":"+p);
+                System.setProperty("java.net.useSystemProxies", "false");
+                System.setProperty("http.proxySet", "true");
+                String h = "46.216.1.99";
+                String p = "3128";
+                setProxy(h, p);
+                JOptionPane.showMessageDialog(null, "You are using the HTTP proxy "+h+":"+p);
+            } else if(host.toLowerCase().equals("system")){
+                System.setProperty("http.proxySet", "false");
+                System.setProperty("java.net.useSystemProxies", "true");
             } else{
-                JOptionPane.showMessageDialog(null, "The proxy you entered was invalid!\nYour proxy hasn't been changed.");
+                JOptionPane.showMessageDialog(null, "The proxy you entered was invalid!");
             }
         }
     }
     
     private static void setProxy(String host, boolean showMessages){
        System.setProperty("java.net.useSystemProxies", "false");
+       System.setProperty("http.proxySet", "true");
        try{
+            System.setProperty("java.net.useSystemProxies", "false");
+            System.setProperty("http.proxySet", "true");
             String[] h2 = host.split(":");
             String s1 = h2[0].trim();
             String s2 = h2[1].trim();
@@ -291,20 +299,27 @@ public class SimpleSwingBrowser extends JFrame {
             }
         } catch(java.lang.IndexOutOfBoundsException e){
             if(host.toLowerCase().equals("none")){
-               setProxy("127.0.0.1", "2997");
-               if(showMessages){
-                   JOptionPane.showMessageDialog(null, "You are not using any proxy.");
+                System.setProperty("http.proxySet", "false");
+                System.setProperty("java.net.useSystemProxies", "false");
+                setProxy("", "");
+                if(showMessages){
+                    JOptionPane.showMessageDialog(null, "You are not using any proxy.");
                 }
             }else if(host.toLowerCase().equals("default")){
-               String h = "46.216.1.99";
-               String p = "3128";
-               setProxy(h, p);
-               if(showMessages){
-                   JOptionPane.showMessageDialog(null, "You are using the HTTP proxy "+h+":"+p);
+                System.setProperty("java.net.useSystemProxies", "false");
+                System.setProperty("http.proxySet", "true");
+                String h = "46.216.1.99";
+                String p = "3128";
+                setProxy(h, p);
+                if(showMessages){
+                    JOptionPane.showMessageDialog(null, "You are using the HTTP proxy "+h+":"+p);
                 }
+            } else if(host.toLowerCase().equals("system")){
+                System.setProperty("http.proxySet", "false");
+                System.setProperty("java.net.useSystemProxies", "true");
             } else{
                 if(showMessages){
-                    JOptionPane.showMessageDialog(null, "The proxy you entered was invalid!\nYour proxy hasn't been changed.");
+                    JOptionPane.showMessageDialog(null, "The proxy you entered was invalid!");
                 }
             }
         }
@@ -332,14 +347,6 @@ public class SimpleSwingBrowser extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                jp = new jProxy(2997);
-                jp.setDebug(0, System.out);     // or set the debug level to 2 for tons of output
-                
-                // ^^^ 0 = None, 2 = A lot
-                
-                jp.start();
-                System.setProperty("java.net.useSystemProxies", "false");
-                System.setProperty("http.proxySet", "true");
                 setProxy("none", false);
                 browser = new SimpleSwingBrowser();
                 browser.setVisible(true);

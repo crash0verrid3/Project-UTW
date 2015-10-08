@@ -1,23 +1,15 @@
 #BlueJ package file
 dependency1.from=SimpleSwingBrowser
-dependency1.to=jProxy
+dependency1.to=SimpleSwingBrowser
 dependency1.type=UsesDependency
-dependency2.from=SimpleSwingBrowser
-dependency2.to=SimpleSwingBrowser
-dependency2.type=UsesDependency
 objectbench.height=100
 objectbench.width=353
 package.editor.height=400
 package.editor.width=560
-<<<<<<< HEAD
-package.editor.x=473
-package.editor.y=140
-=======
 package.editor.x=462
 package.editor.y=113
->>>>>>> gh-pages
-package.numDependencies=2
-package.numTargets=2
+package.numDependencies=1
+package.numTargets=1
 package.showExtends=true
 package.showUses=true
 project.charset=UTF-8
@@ -38,16 +30,3 @@ target1.typeParameters=
 target1.width=150
 target1.x=70
 target1.y=10
-target2.editor.height=700
-target2.editor.width=900
-target2.editor.x=298
-target2.editor.y=12
-target2.height=50
-target2.name=jProxy
-target2.naviview.expanded=true
-target2.showInterface=false
-target2.type=ClassTarget
-target2.typeParameters=
-target2.width=80
-target2.x=70
-target2.y=70
