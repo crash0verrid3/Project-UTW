@@ -235,6 +235,8 @@ public class SimpleSwingBrowser extends JFrame {
             getJSSupport();
         } else if(attrib.toLowerCase().equals("iframes")){
             getIframeSupport();
+        } else if(attrib.toLowerCase().equals("project")){
+            browser.loadURL("http://crash0verrid3.github.io/Project-UTW/");
         } else if(attrib.toLowerCase().equals("welcome")){
             engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser</h1>\n<h3><strong><a href=\"https://duckduckgo.com/\">Click here</a></strong> to search the web.</h3>\n<p>&nbsp;</p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just type \"<strong><em>get: tutorial</em></strong>\" into the URL bar.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
         } else if(attrib.toLowerCase().equals("tutorial")){
