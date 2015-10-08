@@ -216,7 +216,7 @@ public class SimpleSwingBrowser extends JFrame {
 
     private void getAttrib(String attrib){
         if(attrib.toLowerCase().equals("proxy")){
-            if(proxy[0].equals("127.0.0.1") && proxy[1].equals("2997")){
+            if(proxy[0].equals("") && proxy[1].equals("")){
                 JOptionPane.showMessageDialog(null, "You are not using a proxy.");
             } else{
                 JOptionPane.showMessageDialog(null, "You are currently using the HTTP proxy "+proxy[0]+":"+proxy[1]);
