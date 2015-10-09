@@ -1,6 +1,0 @@
-#BlueJ class context
-comment0.params=engine\ browser
-comment0.target=JSCommands(javafx.scene.web.WebEngine,\ SimpleSwingBrowser)
-comment1.params=
-comment1.target=void\ test()
-numComments=2

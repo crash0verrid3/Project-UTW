@@ -1,6 +1,6 @@
 PROJECT TITLE: Project UTW
 PURPOSE OF PROJECT: Simple, lightweight web browser that won't leak memory and will be easy to use proxies with
-VERSION or DATE: 10/8/2015
+VERSION or DATE: 10/9/2015
 HOW TO START THIS PROJECT: run 'main(String[])' in class 'SimpleSwingBrowser' or double-click the JAR file
 AUTHORS: Alex Anderson
 USER INSTRUCTIONS:
