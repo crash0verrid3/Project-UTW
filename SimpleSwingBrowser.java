@@ -13,13 +13,20 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import java.io.*;
- 
+import java.util.*;
+
+import netscape.javascript.JSObject;
+
+import java.nio.channels.*;
+
+import javax.activation.MimeType;
+
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
  
     private final JFXPanel jfxPanel = new JFXPanel();
-    private WebEngine engine;
+    private static WebEngine engine;
     
     private static String[] proxy = new String[2];
  
@@ -32,6 +39,9 @@ public class SimpleSwingBrowser extends JFrame {
     private final JProgressBar progressBar = new JProgressBar();
     
     private static SimpleSwingBrowser browser;
+    
+    private static JSObject jsobj;
+    private static JSCommands jsCommands;
     
  
     public SimpleSwingBrowser() {
@@ -49,6 +59,16 @@ public class SimpleSwingBrowser extends JFrame {
         });
     }
 
+    private static boolean isRedirect(int statusCode) {
+        if (statusCode != HttpURLConnection.HTTP_OK) {
+            if (statusCode == HttpURLConnection.HTTP_MOVED_TEMP
+                || statusCode == HttpURLConnection.HTTP_MOVED_PERM
+                    || statusCode == HttpURLConnection.HTTP_SEE_OTHER) {
+                return true;
+            }
+        }
+        return false;
+    }
     
     private void initComponents() {
         setCloseProcedure();
@@ -85,7 +105,10 @@ public class SimpleSwingBrowser extends JFrame {
         
         setPreferredSize(new Dimension(1024, 600));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        
         pack();
+        
 
     }
  
@@ -97,6 +120,7 @@ public class SimpleSwingBrowser extends JFrame {
  
                 WebView view = new WebView();
                 engine = view.getEngine();
+                
  
                 engine.titleProperty().addListener(new ChangeListener<String>() {
                     @Override
@@ -163,6 +187,8 @@ public class SimpleSwingBrowser extends JFrame {
                                                     JOptionPane.ERROR_MESSAGE);
                                         }
                                     });
+                                } else{
+                                    addJS();
                                 }
                             }
                         });
@@ -235,12 +261,14 @@ public class SimpleSwingBrowser extends JFrame {
             getIframeSupport();
         } else if(attrib.toLowerCase().equals("project")){
             browser.loadURL("http://crash0verrid3.github.io/Project-UTW/");
+        } else if(attrib.toLowerCase().equals("engine")){
+            engine.loadContent("<!DOCTYPE html>\n<html>\n    <body>\n        Your browser does NOT support javascript.\n    </body>\n    <footer>\n        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">\n        <script>\n                ProjectUTW.test();\n                document.body.innerHTML = \"Your browser DOES support javascript!\"\n        </script>\n    </footer>\n</html>\n");
         } else if(attrib.toLowerCase().equals("welcome")){
             engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser</h1>\n<h3><strong><a href=\"https://duckduckgo.com/\">Click here</a></strong> to search the web.</h3>\n<p>&nbsp;</p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just type \"<strong><em>get: tutorial</em></strong>\" into the URL bar.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
         } else if(attrib.toLowerCase().equals("tutorial")){
             engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser tutorial</h1>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy.</a></em></p>\n<p>&nbsp;</p>\n<p><em>To go back to the previous page or go forward a page, right-click the current page and click the</em></p>\n<p><em>corresponding option.</em></p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To go to a website automatically after the proxy is set, type \"proxy: [proxy goes here] &gt; [website to go to]\".</p>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n<p>When you type \"get: [whatever]\", it is called a <em>browser command</em>.&nbsp; Current browser</p>\n<p>commands include:</p>\n<ul>\n<li>\"proxy\" - Shows a popup telling you the currently used proxy server</li>\n<li>\"ip\" - Shows the IP that other websites see when you connect</li>\n<li>\"real ip\" - Shows you the IP websites will see when making STUN requests.<br />There should not be an actual IP shown. If there is no IP shown, you are safe<br />from websites peeking past your proxy.</li>\n<li>\"javascript\" - Tells you whether the browser supports javascript.</li>\n<li>\"iframes\" - Tells you whether the browser supports inline HTML frames</li>\n<li>\"welcome\" - Shows you the page you see when you first open the browser</li>\n<li>\"tutorial\" - Shows you this page</li>\n</ul>\n<p>&nbsp;</p>\n</body>\n</html>\n");
         } else{
-            JOptionPane.showMessageDialog(null, "Error: Could not find attribute '"+attrib+"'.");
+            JOptionPane.showMessageDialog(null, "Error: Could not find '"+attrib+"'.");
         }
     }
     
@@ -343,10 +371,19 @@ public class SimpleSwingBrowser extends JFrame {
     private void getIframeSupport(){
         engine.loadContent("<!DOCTYPE html>\n<html>\n    <body>\n        <iframe style=\"width: 100%; height: 100%; border: none;\" srcdoc = \"Your browser supports iframes\">Your browser does NOT support iframes.</iframe>\n    </body>\n</html>\n");
     }
+    public static boolean option(String message){
+        int dialogResult = JOptionPane.showConfirmDialog (null, message);
+        return (dialogResult == JOptionPane.YES_OPTION);
+    }
+    public void addJS(){
+        jsobj = (JSObject) engine.executeScript("window");
+        jsobj.setMember("ProjectUTW", jsCommands);
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+                jsCommands = new JSCommands(engine);
                 setProxy("none", false);
                 browser = new SimpleSwingBrowser();
                 browser.setVisible(true);
