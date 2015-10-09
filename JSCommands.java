@@ -39,6 +39,6 @@ public class JSCommands
     }
     
     public void test(){
-        JOptionPane.showMessageDialog(null, "Hello!");
+        engine.executeScript("document.body.innerHTML = \"The Project UTW script engine works!\";");
     }
 }
