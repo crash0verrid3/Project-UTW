@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
+import javafx.concurrent.Worker.State;
  
 import javax.swing.*;
 import java.awt.*;
@@ -39,6 +40,8 @@ public class SimpleSwingBrowser extends JFrame {
     private final JProgressBar progressBar = new JProgressBar();
     
     private static SimpleSwingBrowser browser;
+    
+    private static JSCommands jsCommands;
     
  
     public SimpleSwingBrowser() {
@@ -154,6 +157,19 @@ public class SimpleSwingBrowser extends JFrame {
                         });
                     }
                 });
+                
+                engine.getLoadWorker().stateProperty().addListener(
+                    new ChangeListener<State>() {
+                        @Override
+                        public void changed(ObservableValue<? extends State> ov,
+                            State oldState, State newState) {
+                            if (newState == State.SUCCEEDED) {
+                                    JSObject win = (JSObject) engine.executeScript("window");
+                                    win.setMember("ProjectUTW", jsCommands);
+                                }
+                            }
+                        }
+                );
  
                 engine.getLoadWorker().workDoneProperty().addListener(new ChangeListener<Number>() {
                     @Override
@@ -377,6 +393,7 @@ public class SimpleSwingBrowser extends JFrame {
                 setProxy("none", false);
                 browser = new SimpleSwingBrowser();
                 browser.setVisible(true);
+                jsCommands = new JSCommands(engine, browser);
                 String homepage = "get: Welcome";
                 browser.loadURL(homepage);
            }     
