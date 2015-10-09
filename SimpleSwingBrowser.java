@@ -121,6 +121,8 @@ public class SimpleSwingBrowser extends JFrame {
                 WebView view = new WebView();
                 engine = view.getEngine();
                 
+                JSObject win = (JSObject) engine.executeScript("window");
+                win.setMember("ProjectUTW", jsCommands);
  
                 engine.titleProperty().addListener(new ChangeListener<String>() {
                     @Override
@@ -394,6 +396,7 @@ public class SimpleSwingBrowser extends JFrame {
                 browser = new SimpleSwingBrowser();
                 browser.setVisible(true);
                 jsCommands = new JSCommands(engine, browser);
+                
                 String homepage = "get: Welcome";
                 browser.loadURL(homepage);
            }     
