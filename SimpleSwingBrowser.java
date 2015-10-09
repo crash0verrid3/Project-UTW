@@ -188,7 +188,7 @@ public class SimpleSwingBrowser extends JFrame {
                                         }
                                     });
                                 } else{
-                                    addJS();
+                                    // Do nothing as of yet
                                 }
                             }
                         });
