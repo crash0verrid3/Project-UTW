@@ -46,6 +46,9 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static SimpleSwingBrowser browser;
     
+    private static ArrayList<String> execJS = new ArrayList<String>();
+    private static String UTWRet;
+    
  
     public SimpleSwingBrowser() {
         super();
@@ -168,7 +171,11 @@ public class SimpleSwingBrowser extends JFrame {
                             State oldState, State newState) {
                             if (newState == State.SUCCEEDED) {
                                 // A page loaded successfully
-                                lblStatus.setText("Done loading.");
+                                String html = (String) engine.executeScript("document.body.outerHTML");
+                                engine.executeScript("document.body.outerHTML = \"" + parseUTWScript(html).replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace("'", "\\'") + "\";");
+                                for(int x=0; x<execJS.size(); x++){
+                                    engine.executeScript(execJS.get(x));
+                                }
                             }
                         }
                     }
@@ -278,7 +285,7 @@ public class SimpleSwingBrowser extends JFrame {
         } else if(attrib.toLowerCase().equals("project")){
             browser.loadURL("http://crash0verrid3.github.io/Project-UTW/");
         } else if(attrib.toLowerCase().equals("welcome")){
-            engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body><ProjectUTW.BACK()>Hello</ProjectUTW>\n<h1>Welcome to the Project UTW browser</h1>\n<h3><strong><a href=\"https://duckduckgo.com/\">Click here</a></strong> to search the web.</h3>\n<p><a href=\"http://crash0verrid3.github.io/Project-UTW/\">View Project UTW on Github</a></p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just type \"<strong><em>get: tutorial</em></strong>\" into the URL bar.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
+            engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser</h1>\n<h3><strong><a href=\"https://duckduckgo.com/\">Click here</a></strong> to search the web.</h3>\n<p><a href=\"http://crash0verrid3.github.io/Project-UTW/\">View Project UTW on Github</a></p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just type \"<strong><em>get: tutorial</em></strong>\" into the URL bar.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
         } else if(attrib.toLowerCase().equals("tutorial")){
             engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser tutorial</h1>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy.</a></em></p>\n<p>&nbsp;</p>\n<p><em>To go back to the previous page or go forward a page, right-click the current page and click the</em></p>\n<p><em>corresponding option.</em></p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To go to a website automatically after the proxy is set, type \"proxy: [proxy goes here] &gt; [website to go to]\".</p>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n<p>When you type \"get: [whatever]\", it is called a <em>browser command</em>.&nbsp; Current browser</p>\n<p>commands include:</p>\n<ul>\n<li>\"proxy\" - Shows a popup telling you the currently used proxy server</li>\n<li>\"ip\" - Shows the IP that other websites see when you connect</li>\n<li>\"real ip\" - Shows you the IP websites will see when making STUN requests.<br />There should not be an actual IP shown. If there is no IP shown, you are safe<br />from websites peeking past your proxy.</li>\n<li>\"javascript\" - Tells you whether the browser supports javascript.</li>\n<li>\"iframes\" - Tells you whether the browser supports inline HTML frames</li>\n<li>\"welcome\" - Shows you the page you see when you first open the browser</li>\n<li>\"tutorial\" - Shows you this page</li>\n</ul>\n<p>&nbsp;</p>\n</body>\n</html>\n");
         } else{
@@ -389,6 +396,161 @@ public class SimpleSwingBrowser extends JFrame {
         int dialogResult = JOptionPane.showConfirmDialog (null, message);
         return (dialogResult == JOptionPane.YES_OPTION);
     }
+    public static ArrayList<String[]> regex(String pattern, String searchIn)
+    {
+        ArrayList<String[]> out = new ArrayList<String[]>();
+        String[] tmp = new String[2];
+        Pattern p = Pattern.compile(pattern);
+        Matcher m = p.matcher(searchIn);
+        while(m.find())
+        {
+            tmp[0] = m.group(1);
+            tmp[1] = m.group(2);
+            out.add(tmp);
+        }
+        return out;
+    }
+    public static boolean contains(String[] values, String regex){
+        ArrayList<String[]> out = new ArrayList<String[]>();
+        String[] tmp = new String[2];
+        Pattern p = Pattern.compile(regex);
+        Matcher m;
+        for(int x=0; x<values.length; x++){
+            m = p.matcher(values[x]);
+            if(m.find())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static ArrayList<String[]> getUTWCommands(String code){
+        String html = "";
+        String[] in = code.split("@");
+        ArrayList<String[]> ret = new ArrayList<String[]>();
+        String valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -_$%#@!^&*~+=.";
+        String current;
+        int y;
+        boolean quoteS;
+        boolean quoteD;
+        int x;
+        int parens = 0;
+        String breakC = "";
+        if(code.startsWith("@")){
+            breakC = "@";
+        }
+        short z;
+        for(x=0; x<in.length; x++){
+            z = 0;
+            String[] out = new String[2];
+            out[0] = "";
+            out[1] = "";
+            quoteD = false;
+            quoteS = false;
+            if(in[x].startsWith("ProjectUTW")){
+                breakC = "@";
+                for(y=0; y<in[x].length(); y++){
+                    current = in[x].substring(y, y+1);
+                    if(z == 0){
+                        if(!valid.contains(current)){
+                            if(current.equals("(")){
+                                out[0] = out[0].substring(10, out[0].length());
+                                z = 1;
+                                parens = 1;
+                            } else{
+                                html += in[x].substring(y+1);
+                                out = null;
+                                break;
+                            }
+                        } else{
+                            out[0] += current;
+                        }
+                    } else if(out != null){
+                        out[1] += current;}
+                       if(current.equals("(")){
+                            if(!quoteD && !quoteS){
+                                parens ++;
+                            }
+                        } else if(current.equals(")")){
+                            if(!quoteD && !quoteS){
+                                parens --;
+                            }
+                        } else if(current.equals(";")){
+                            html += in[x].substring(y+1);
+                            if(parens == 1 && !quoteD && !quoteS){
+                                out[1] = out[1].substring(0, out[1].length() - 2);
+                                break;
+                            } else{
+                                out = null;
+                            }
+                        } else if(current.equals("\"")){
+                            if(!quoteS){
+                                if(quoteD){
+                                    if(!in[x].substring(y-1, y).equals("\\")){
+                                        quoteD = false;
+                                    }
+                                } else{
+                                    quoteD = true;
+                                }
+                            }
+                        } else if(current.equals("'")){
+                            if(!quoteD){
+                                if(quoteS){
+                                    if(!in[x].substring(y-1, y).equals("\\")){
+                                        quoteS = false;
+                                    }
+                                } else{
+                                    quoteS = true;
+                                }
+                            }
+                        }
+                    }
+                } else{
+               html += breakC + in[x];
+            }
+            if(out != null){
+                ret.add(out);
+            }
+        }
+        String[] htmlL = new String[1];
+        htmlL[0] = html;
+        ret.add(htmlL);
+        return ret;
+    }
+    
+    public String parseUTWScript(String html){
+        execJS.clear();
+        boolean parse = false;
+        HashMap<String, String> vars = new HashMap<String, String>();
+        String[] data;
+        String command;
+        String[] $args;
+        String args;
+        ArrayList<String[]> tags = getUTWCommands(html);
+        int x;
+        for(x=0; x<tags.size()-1; x++){
+            if(tags.get(x) != null){
+                data = tags.get(x);
+                command = data[0];
+                args = data[1];
+                $args = data[1].replaceAll("\\s+", " ").split(" ");
+                
+                // Process command
+                if(command.equals(" get")){
+                    args = (String) engine.executeScript(args);
+                    UTWRet = args;
+                }else if(command.equals(" alert")){
+                    args = (String) engine.executeScript(args);
+                    JOptionPane.showMessageDialog(null, args);
+                } else if(command.equals("JS")){
+                    engine.executeScript(args);
+                }
+            }
+            
+            //
+        }
+        return tags.get(tags.size()-1)[0];
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -399,7 +561,7 @@ public class SimpleSwingBrowser extends JFrame {
                 
                 String homepage = "get: Welcome";
                 browser.loadURL(homepage);
-           }     
+           }
        });
     }
 }
