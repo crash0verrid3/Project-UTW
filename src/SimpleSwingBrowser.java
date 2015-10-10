@@ -53,8 +53,8 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static WebExtensions webExtensions = null;
     
-    public static final int ProjectUTW_VERSION = 1;
-    private static int latestVersion;
+    public static final int ProjectUTW_VERSION = 2;
+    private static int latestVersion = -1;
     
  
     public SimpleSwingBrowser() {
@@ -287,7 +287,7 @@ public class SimpleSwingBrowser extends JFrame {
                 // Do nothing.
             }
         } else if(attrib.toLowerCase().equals("version")){
-            engine.loadContent("<html><body>Current version: "+ProjectUTW_VERSION+"\nLatest version: "+latestVersion+"\n</body></html>");
+            engine.loadContent("<html><body>Current version: "+ProjectUTW_VERSION+"\n<br>\nLatest version: "+latestVersion+"\n</body></html>");
         } else if(attrib.toLowerCase().equals("web extensions")){
             webExtensions = new WebExtensions(engine);
         } else if(attrib.toLowerCase().equals("remove web extensions")){
@@ -641,7 +641,11 @@ public class SimpleSwingBrowser extends JFrame {
 
     public static void main(String[] args) throws IOException, URISyntaxException{
             URL url = new URL("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/version.txt.txt");
-            latestVersion = (new Scanner(url.openStream())).nextInt();
+            try{
+                latestVersion = (new Scanner(url.openStream())).nextInt();
+            } catch(java.lang.Throwable e){
+                // Ignore
+            }
             if(latestVersion > ProjectUTW_VERSION){
                 update("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/JBrowser.jar");
             }
