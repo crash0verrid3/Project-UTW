@@ -54,6 +54,7 @@ public class SimpleSwingBrowser extends JFrame {
     private static WebExtensions webExtensions = null;
     
     public static final int ProjectUTW_VERSION = 1;
+    private static int latestVersion;
     
  
     public SimpleSwingBrowser() {
@@ -285,6 +286,8 @@ public class SimpleSwingBrowser extends JFrame {
             } catch(IOException e){
                 // Do nothing.
             }
+        } else if(attrib.toLowerCase().equals("version")){
+            engine.loadContent("<html><body>Current version: "+ProjectUTW_VERSION+"\nLatest version: "+latestVersion+"\n</body></html>");
         } else if(attrib.toLowerCase().equals("web extensions")){
             webExtensions = new WebExtensions(engine);
         } else if(attrib.toLowerCase().equals("remove web extensions")){
@@ -602,29 +605,46 @@ public class SimpleSwingBrowser extends JFrame {
         FileOutputStream fos = new FileOutputStream(outputFile);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
     }
-    private static void update(String url) throws IOException{
+    private static void update(String url) throws IOException, URISyntaxException{
         URL website = new URL(url);
         ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-        String name = SimpleSwingBrowser.class.getProtectionDomain()
+        String path = SimpleSwingBrowser.class.getProtectionDomain()
           .getCodeSource()
           .getLocation()
-          .getPath();
-        System.out.println(name);
-        //FileOutputStream fos = new FileOutputStream(name);
-        //fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+          .getPath().substring(1);
+        if(path.endsWith(".jar")){
+            FileOutputStream fos = new FileOutputStream(path);
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            restartApplication();
+        }
+    }
+    public static void restartApplication() throws URISyntaxException, IOException
+    {
+      final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+      final File currentJar = new File(SimpleSwingBrowser.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+    
+      /* is it a jar file? */
+      if(!currentJar.getName().endsWith(".jar"))
+        return;
+    
+      /* Build command: java -jar application.jar */
+      final ArrayList<String> command = new ArrayList<String>();
+      command.add(javaBin);
+      command.add("-jar");
+      command.add(currentJar.getPath());
+    
+      final ProcessBuilder builder = new ProcessBuilder(command);
+      builder.start();
+      System.exit(0);
     }
     
 
-    public static void main(String[] args) throws IOException{
-        try{
-            URL url = new URL("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/version.txt");
-            int newVersion = (new Scanner(url.openStream())).nextInt();
-            if(newVersion > ProjectUTW_VERSION){
+    public static void main(String[] args) throws IOException, URISyntaxException{
+            URL url = new URL("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/version.txt.txt");
+            latestVersion = (new Scanner(url.openStream())).nextInt();
+            if(latestVersion > ProjectUTW_VERSION){
                 update("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/JBrowser.jar");
             }
-        } catch(java.lang.Throwable e){
-            // Ignore
-        }
         SwingUtilities.invokeLater(new Runnable() {
             public void run(){
                 setProxy("none", false);
