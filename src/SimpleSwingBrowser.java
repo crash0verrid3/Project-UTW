@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.lang.reflect.*;
+
 import javax.tools.*;
 
 import netscape.javascript.JSObject;
@@ -47,7 +49,12 @@ public class SimpleSwingBrowser extends JFrame {
     private static SimpleSwingBrowser browser;
     
     private static ArrayList<String> execJS = new ArrayList<String>();
-    private static String UTWRet;
+    static String UTWRet;
+    
+    private static WebExtensions webExtensions = null;
+    private static BetaExtensions betaExtensions = null;
+    private static boolean _betaExtensions = false;
+    private static boolean _webExtensions = false;
     
  
     public SimpleSwingBrowser() {
@@ -59,6 +66,9 @@ public class SimpleSwingBrowser extends JFrame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
+                try{
+                    writeConf(webExtensions != null, betaExtensions != null);  
+                } catch(IOException e){}
                 dispose();
                 System.exit(0);
             }
@@ -126,6 +136,13 @@ public class SimpleSwingBrowser extends JFrame {
  
                 WebView view = new WebView();
                 engine = view.getEngine();
+                
+                if(_webExtensions){
+                        webExtensions = new WebExtensions(engine);
+                        if(_betaExtensions){
+                            betaExtensions = new BetaExtensions(engine);
+                        }
+                    }
  
                 engine.titleProperty().addListener(new ChangeListener<String>() {
                     @Override
@@ -276,6 +293,15 @@ public class SimpleSwingBrowser extends JFrame {
             } catch(IOException e){
                 // Do nothing.
             }
+        } else if(attrib.toLowerCase().equals("web extensions")){
+            webExtensions = new WebExtensions(engine);
+        } else if(attrib.toLowerCase().equals("beta extensions")){
+            webExtensions = new WebExtensions(engine);
+            betaExtensions = new BetaExtensions(engine);
+        } else if(attrib.toLowerCase().equals("remove web extensions")){
+            webExtensions = null;
+        } else if(attrib.toLowerCase().equals("remove beta extensions")){
+            betaExtensions = null;
         } else if(attrib.toLowerCase().equals("real ip")){
             getStunIP();
         } else if(attrib.toLowerCase().equals("javascript")){
@@ -517,8 +543,22 @@ public class SimpleSwingBrowser extends JFrame {
         ret.add(htmlL);
         return ret;
     }
+    public static boolean checkFileCanRead(File file){
+        if (!file.exists()) 
+            return false;
+        if (!file.canRead())
+            return false;
+        try {
+            FileReader fileReader = new FileReader(file.getAbsolutePath());
+            fileReader.read();
+            fileReader.close();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
     
-    public String parseUTWScript(String html){
+    private String parseUTWScript(String html){
         execJS.clear();
         boolean parse = false;
         HashMap<String, String> vars = new HashMap<String, String>();
@@ -526,35 +566,109 @@ public class SimpleSwingBrowser extends JFrame {
         String command;
         String[] $args;
         String args;
+        boolean failed;
         ArrayList<String[]> tags = getUTWCommands(html);
+        String[] delete = new String[2];
+        delete[0] = "false";
+        delete[1] = "false";
+        String[] required = new String[2];
+        required[0] = "false";
+        required[1] = "false";
         int x;
         for(x=0; x<tags.size()-1; x++){
             if(tags.get(x) != null){
+                failed = false;
                 data = tags.get(x);
                 command = data[0];
                 args = data[1];
-                $args = data[1].replaceAll("\\s+", " ").split(" ");
                 
                 // Process command
-                if(command.equals(" get")){
+                if(command.equals(" require")){
                     args = (String) engine.executeScript(args);
-                    UTWRet = args;
-                }else if(command.equals(" alert")){
-                    args = (String) engine.executeScript(args);
-                    JOptionPane.showMessageDialog(null, args);
-                } else if(command.equals("JS")){
-                    engine.executeScript(args);
+                    if(args.equals("web extensions")){
+                        if(webExtensions == null && required[0].equals("false")){
+                            if(option("This website requires you to temporarily enable web extensions.\nWould you like to?")){
+                                webExtensions = new WebExtensions(engine);
+                                delete[0] = "true";
+                            } else{
+                                JOptionPane.showMessageDialog(null, "Some features of this website may not work without web extensions.");
+                            }
+                        }
+                    }
+                    if(args.equals("beta extensions") && required[1].equals("false")){
+                        if(betaExtensions == null){
+                            if(option("This website requires you to temporarily enable beta web extensions.\nWould you like to?")){
+                                webExtensions = new WebExtensions(engine);
+                                delete[0] = "true";
+                                betaExtensions = new BetaExtensions(engine);
+                                delete[1] = "true";
+                            } else{
+                                JOptionPane.showMessageDialog(null, "Some features of this website may not work without beta web extensions.");
+                            }
+                        }
+                    }
+                } else{
+                    if(betaExtensions != null && webExtensions != null){
+                        if(!betaExtensions.runUTW(command, args)){
+                            if(!webExtensions.runUTW(command, args)){
+                                failed = true;
+                            } else{
+                                failed = true;
+                            }
+                        }
+                    } else if(webExtensions != null){
+                        if(!webExtensions.runUTW(command, args)){
+                            failed = true;
+                        }
+                    } else{
+                        failed = true;
+                    }
                 }
             }
             
             //
         }
+        if(delete[0].equals("true")){
+            webExtensions = null;
+        }
+        if(delete[1].equals("true")){
+            betaExtensions = null;
+        }
         return tags.get(tags.size()-1)[0];
     }
+    private static void writeConf(boolean b1, boolean b2) throws IOException{
+        PrintWriter writer = new PrintWriter(".utw.conf", "UTF-8");
+        writer.println(String.valueOf(b1));
+        writer.println(String.valueOf(b2));
+        writer.close();
+    }
+    
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException{
+        // Config format: useExtensions,useBetaExtensions
+                String config = "";
+                if(checkFileCanRead(new File(".utw.conf"))){
+                    String[] conf;
+                    File fileDir = new File(".utw.conf");
+                    BufferedReader in = null;
+                    in = new BufferedReader(new InputStreamReader(new FileInputStream(fileDir), "UTF8"));
+                    String str;
+                    while ((str = in.readLine()) != null) {
+                        config += str + "\n";
+                    }
+                    in.close();
+                    conf = config.split("\n");
+                    if(conf[0].trim().equals("true")){
+                        _webExtensions = true;
+                        if(conf[1].trim().equals("true")){
+                            _betaExtensions = true;
+                        }
+                    }
+                } else{
+                    writeConf(false, false);          
+                }
         SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
+            public void run(){
                 setProxy("none", false);
                 browser = new SimpleSwingBrowser();
                 browser.setVisible(true);
@@ -562,6 +676,6 @@ public class SimpleSwingBrowser extends JFrame {
                 String homepage = "get: Welcome";
                 browser.loadURL(homepage);
            }
-       });
+        });
     }
 }
