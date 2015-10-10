@@ -52,9 +52,8 @@ public class SimpleSwingBrowser extends JFrame {
     static String UTWRet;
     
     private static WebExtensions webExtensions = null;
-    private static BetaExtensions betaExtensions = null;
-    private static boolean _betaExtensions = false;
-    private static boolean _webExtensions = false;
+    
+    public static final int ProjectUTW_VERSION = 1;
     
  
     public SimpleSwingBrowser() {
@@ -66,9 +65,6 @@ public class SimpleSwingBrowser extends JFrame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
-                try{
-                    writeConf(webExtensions != null, betaExtensions != null);  
-                } catch(IOException e){}
                 dispose();
                 System.exit(0);
             }
@@ -137,12 +133,7 @@ public class SimpleSwingBrowser extends JFrame {
                 WebView view = new WebView();
                 engine = view.getEngine();
                 
-                if(_webExtensions){
-                        webExtensions = new WebExtensions(engine);
-                        if(_betaExtensions){
-                            betaExtensions = new BetaExtensions(engine);
-                        }
-                    }
+                webExtensions = new WebExtensions(engine);
  
                 engine.titleProperty().addListener(new ChangeListener<String>() {
                     @Override
@@ -193,6 +184,7 @@ public class SimpleSwingBrowser extends JFrame {
                                 for(int x=0; x<execJS.size(); x++){
                                     engine.executeScript(execJS.get(x));
                                 }
+                                lblStatus.setText("Loaded page.");
                             }
                         }
                     }
@@ -295,13 +287,8 @@ public class SimpleSwingBrowser extends JFrame {
             }
         } else if(attrib.toLowerCase().equals("web extensions")){
             webExtensions = new WebExtensions(engine);
-        } else if(attrib.toLowerCase().equals("beta extensions")){
-            webExtensions = new WebExtensions(engine);
-            betaExtensions = new BetaExtensions(engine);
         } else if(attrib.toLowerCase().equals("remove web extensions")){
             webExtensions = null;
-        } else if(attrib.toLowerCase().equals("remove beta extensions")){
-            betaExtensions = null;
         } else if(attrib.toLowerCase().equals("real ip")){
             getStunIP();
         } else if(attrib.toLowerCase().equals("javascript")){
@@ -451,30 +438,25 @@ public class SimpleSwingBrowser extends JFrame {
         return false;
     }
     public static ArrayList<String[]> getUTWCommands(String code){
-        String html = "";
         String[] in = code.split("@");
         ArrayList<String[]> ret = new ArrayList<String[]>();
-        String valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -_$%#@!^&*~+=.";
+        String valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -_$.";
         String current;
         int y;
         boolean quoteS;
         boolean quoteD;
         int x;
         int parens = 0;
-        String breakC = "";
-        if(code.startsWith("@")){
-            breakC = "@";
-        }
         short z;
-        for(x=0; x<in.length; x++){
+        String html = in[0];
+        for(x=1; x<in.length; x++){
             z = 0;
             String[] out = new String[2];
             out[0] = "";
             out[1] = "";
             quoteD = false;
             quoteS = false;
-            if(in[x].startsWith("ProjectUTW")){
-                breakC = "@";
+            if(in[x].startsWith("ProjectUTW") && !in[x-1].trim().endsWith("#")){
                 for(y=0; y<in[x].length(); y++){
                     current = in[x].substring(y, y+1);
                     if(z == 0){
@@ -532,7 +514,7 @@ public class SimpleSwingBrowser extends JFrame {
                         }
                     }
                 } else{
-               html += breakC + in[x];
+               html += "@" + in[x];
             }
             if(out != null){
                 ret.add(out);
@@ -558,23 +540,27 @@ public class SimpleSwingBrowser extends JFrame {
         return true;
     }
     
-    private String parseUTWScript(String html){
+    static String parseUTWScript(String html){
         execJS.clear();
         boolean parse = false;
         HashMap<String, String> vars = new HashMap<String, String>();
+        HashMap<String, Boolean> systemVars = new HashMap<String, Boolean>();
+        vars.put(".system.IO.File.write", "@run fwrite &args");
+        systemVars.put("system.IO.File.write", true);
         String[] data;
         String command;
         String[] $args;
         String args;
         boolean failed;
         ArrayList<String[]> tags = getUTWCommands(html);
-        String[] delete = new String[2];
+        String[] delete = new String[1];
         delete[0] = "false";
-        delete[1] = "false";
-        String[] required = new String[2];
-        required[0] = "false";
-        required[1] = "false";
+        int wLayers = 0;
+        int wIters = 0;
+        ArrayList<Integer> wLoops = new ArrayList<Integer>();
+        ArrayList<String> wConds = new ArrayList<String>();
         int x;
+        String _ret;
         for(x=0; x<tags.size()-1; x++){
             if(tags.get(x) != null){
                 failed = false;
@@ -586,7 +572,7 @@ public class SimpleSwingBrowser extends JFrame {
                 if(command.equals(" require")){
                     args = (String) engine.executeScript(args);
                     if(args.equals("web extensions")){
-                        if(webExtensions == null && required[0].equals("false")){
+                        if(webExtensions == null){
                             if(option("This website requires you to temporarily enable web extensions.\nWould you like to?")){
                                 webExtensions = new WebExtensions(engine);
                                 delete[0] = "true";
@@ -595,78 +581,50 @@ public class SimpleSwingBrowser extends JFrame {
                             }
                         }
                     }
-                    if(args.equals("beta extensions") && required[1].equals("false")){
-                        if(betaExtensions == null){
-                            if(option("This website requires you to temporarily enable beta web extensions.\nWould you like to?")){
-                                webExtensions = new WebExtensions(engine);
-                                delete[0] = "true";
-                                betaExtensions = new BetaExtensions(engine);
-                                delete[1] = "true";
-                            } else{
-                                JOptionPane.showMessageDialog(null, "Some features of this website may not work without beta web extensions.");
-                            }
-                        }
-                    }
-                } else{
-                    if(betaExtensions != null && webExtensions != null){
-                        if(!betaExtensions.runUTW(command, args)){
-                            if(!webExtensions.runUTW(command, args)){
-                                failed = true;
-                            } else{
-                                failed = true;
-                            }
-                        }
-                    } else if(webExtensions != null){
-                        if(!webExtensions.runUTW(command, args)){
+               } else{
+                    if(webExtensions != null){
+                        if(!webExtensions.runUTW(command, args, vars, systemVars)){
                             failed = true;
                         }
-                    } else{
-                        failed = true;
                     }
                 }
             }
-            
             //
         }
         if(delete[0].equals("true")){
             webExtensions = null;
         }
-        if(delete[1].equals("true")){
-            betaExtensions = null;
-        }
         return tags.get(tags.size()-1)[0];
     }
-    private static void writeConf(boolean b1, boolean b2) throws IOException{
-        PrintWriter writer = new PrintWriter(".utw.conf", "UTF-8");
-        writer.println(String.valueOf(b1));
-        writer.println(String.valueOf(b2));
-        writer.close();
+    private static void downloadFile(String url, String outputFile) throws IOException{
+        URL website = new URL(url);
+        ReadableByteChannel rbc = Channels.newChannel(website.openStream());
+        FileOutputStream fos = new FileOutputStream(outputFile);
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+    }
+    private static void update(String url) throws IOException{
+        URL website = new URL(url);
+        ReadableByteChannel rbc = Channels.newChannel(website.openStream());
+        String name = SimpleSwingBrowser.class.getProtectionDomain()
+          .getCodeSource()
+          .getLocation()
+          .getPath();
+        System.out.println(name);
+        //FileOutputStream fos = new FileOutputStream(name);
+        //fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
     }
     
 
     public static void main(String[] args) throws IOException{
-        // Config format: useExtensions,useBetaExtensions
-                String config = "";
-                if(checkFileCanRead(new File(".utw.conf"))){
-                    String[] conf;
-                    File fileDir = new File(".utw.conf");
-                    BufferedReader in = null;
-                    in = new BufferedReader(new InputStreamReader(new FileInputStream(fileDir), "UTF8"));
-                    String str;
-                    while ((str = in.readLine()) != null) {
-                        config += str + "\n";
-                    }
-                    in.close();
-                    conf = config.split("\n");
-                    if(conf[0].trim().equals("true")){
-                        _webExtensions = true;
-                        if(conf[1].trim().equals("true")){
-                            _betaExtensions = true;
-                        }
-                    }
-                } else{
-                    writeConf(false, false);          
-                }
+        try{
+            URL url = new URL("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/version.txt");
+            int newVersion = (new Scanner(url.openStream())).nextInt();
+            if(newVersion > ProjectUTW_VERSION){
+                update("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/JBrowser.jar");
+            }
+        } catch(java.lang.Throwable e){
+            // Ignore
+        }
         SwingUtilities.invokeLater(new Runnable() {
             public void run(){
                 setProxy("none", false);
