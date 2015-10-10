@@ -35,18 +35,46 @@ public class WebExtensions
     public WebExtensions(WebEngine engine){
         this.engine = engine;
     }
-    public boolean runUTW(String command, String args){
-        if(command.equals(" get")){
+    private String parseUTW(String data){ // Loads and runs a UTW script
+        return SimpleSwingBrowser.parseUTWScript(data);
+    }
+    private String loadUTW(String data){ // Loads a UTW script without running it
+        ArrayList<String[]> ret = SimpleSwingBrowser.getUTWCommands(data);
+        return ret.get(ret.size()-1)[0];
+    }
+    public boolean runUTW(String command, String args, HashMap<String, String> vars, HashMap<String, Boolean> systemVars){
+        if(command.contains(".")){
+            if(vars.containsKey(command)){
+                if(runExtendedUTW(command, args, vars, systemVars)){
+                    return true;
+                } else{
+                    return false;
+                }
+            } else{
+                return false;
+            }
+        } else if(command.equals(" return")){
             args = (String) engine.executeScript(args);
-            SimpleSwingBrowser.UTWRet = args;
+            engine.executeScript("UTWRet = \"" + args.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace("'", "\\'") + "\";");
         } else if(command.equals(" alert")){
             args = (String) engine.executeScript(args);
             JOptionPane.showMessageDialog(null, args);
             return true;
-        } else if(command.equals("JS")){
+        } else if(command.equals(" _alert")){
+            JOptionPane.showMessageDialog(null, args);
+            return true;
+        } else if(command.equals(" JS")){
             engine.executeScript(args);
             return true;
-        } 
+        } else if(command.equals(" -JS")){
+            engine.executeScript((String)engine.executeScript(args));
+            return true;
+        } else if(command.equals(" _return")){
+            engine.executeScript("UTWRet = \"" + args.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace("'", "\\'") + "\";");
+        }
+        return false; // Did it success? true=yes, false=no
+    }
+    public boolean runExtendedUTW(String command, String args, HashMap<String, String> vars, HashMap<String, Boolean> systemVars){
         return false;
     }
 }
