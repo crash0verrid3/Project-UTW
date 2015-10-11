@@ -49,15 +49,15 @@ public class SimpleSwingBrowser extends JFrame {
     private static SimpleSwingBrowser browser;
     
     private static ArrayList<String> execJS = new ArrayList<String>();
-    static String UTWRet;
     
     private static WebExtensions webExtensions = null;
     
-    public static final int ProjectUTW_VERSION = 3;
+    public static final int ProjectUTW_VERSION = 4;
     private static int latestVersion = -1;
     
     public static final String PATH = getProgramPath();
-    private static ArrayList<String> pluginCode = new ArrayList<String>();    
+    private static ArrayList<String> pluginCode = new ArrayList<String>();
+    private static String _url;
  
     public SimpleSwingBrowser() {
         super();
@@ -217,6 +217,7 @@ public class SimpleSwingBrowser extends JFrame {
                             State oldState, State newState) {
                             if (newState == State.SUCCEEDED) {
                                 // A page loaded successfully
+                                engine.executeScript("ProjectUTW_SITE_URL = \"" + _url.replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace("'", "\\'") + "\";");
                                 for(int x=0; x<pluginCode.size(); x++){
                                     engine.executeScript(pluginCode.get(x));
                                 }
@@ -272,6 +273,7 @@ public class SimpleSwingBrowser extends JFrame {
     }
  
     public void loadURL(final String url) {
+        _url = url;
         Platform.runLater(new Runnable() {
             @Override 
             public void run() {
