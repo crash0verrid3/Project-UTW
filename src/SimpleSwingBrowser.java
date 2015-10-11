@@ -8,7 +8,7 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import javafx.concurrent.Worker.State;
- 
+import org.w3c.dom.*; 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,23 +16,18 @@ import javax.swing.border.*;
 import java.net.*;
 import java.io.*;
 import java.util.*;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import java.lang.reflect.*;
-
 import javax.tools.*;
-
 import netscape.javascript.JSObject;
-
 import java.nio.channels.*;
-
 import javax.activation.MimeType;
-
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
+    public static final int ProjectUTW_VERSION = 9;
+    private static int latestVersion = -1;
  
     private final JFXPanel jfxPanel = new JFXPanel();
     private static WebEngine engine;
@@ -53,13 +48,12 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static WebExtensions webExtensions = null;
     
-    public static final int ProjectUTW_VERSION = 8;
-    private static int latestVersion = -1;
-    
     public static final String PATH = getProgramPath();
     private static ArrayList<String> pluginCode = new ArrayList<String>();
     private static String _url;
-    private static final String SEARCH_ENGINE = "https://duckduckgo.com/?q=%s";
+    private static final HashMap<String, String> SEARCH_ENGINES = new HashMap<String, String>();
+    private static String SEARCH_ENGINE;
+    private static final String HOMEPAGE = "get: Welcome";
  
     public SimpleSwingBrowser() {
         super();
@@ -232,6 +226,16 @@ public class SimpleSwingBrowser extends JFrame {
                                 for(int x=0; x<execJS.size(); x++){
                                     engine.executeScript(execJS.get(x));
                                 }
+                                org.w3c.dom.events.EventListener listener = new org.w3c.dom.events.EventListener() {
+                                    public void handleEvent(org.w3c.dom.events.Event ev) {
+                                        String href = ((Element)ev.getTarget()).getAttribute("href");
+                                        loadURL(href);
+                                    }
+                                };
+                                NodeList nodeList = engine.getDocument().getElementsByTagName("a");
+                                for (int i=0; i<nodeList.getLength(); i++){
+                                    ((org.w3c.dom.events.EventTarget)nodeList.item(i)).addEventListener("click", listener, false);
+                                }
                                 lblStatus.setText("Loaded page.");
                             }
                         }
@@ -280,6 +284,7 @@ public class SimpleSwingBrowser extends JFrame {
  
     public void loadURL(final String url) {
         _url = url;
+        final String BEFORE_URL = txtURL.getText();
         Platform.runLater(new Runnable() {
             @Override 
             public void run() {
@@ -301,15 +306,54 @@ public class SimpleSwingBrowser extends JFrame {
                 } else if(url.startsWith("get:")){
                     getAttrib(url.substring(4).trim());
                 } else{
-                    if((url.contains(" ") || (!url.contains(".") && !url.equals("localhost"))) && !url.trim().startsWith("!")){
+                    if(url.startsWith("search:")){
+                        String eng = url.substring(7).trim().toLowerCase();
+                        if(SEARCH_ENGINES.containsKey(eng)){
+                            SEARCH_ENGINE = SEARCH_ENGINES.get(eng);
+                            txtURL.setText(BEFORE_URL);
+                        } else{
+                            if(eng.contains("%s")){
+                                SEARCH_ENGINE = eng;
+                                txtURL.setText(BEFORE_URL);
+                            }
+                        }
+                    }else if(url.startsWith("javascript:")){
+                        engine.executeScript(url.substring(11));
+                        txtURL.setText(BEFORE_URL);
+                    } else if(url.startsWith("mailto:")){
+                        Desktop desktop;
+                        URI mailto = null;
+                            if (Desktop.isDesktopSupported() 
+                                && (desktop = Desktop.getDesktop()).isSupported(Desktop.Action.MAIL)) {
+                              try{
+                                  mailto = new URI(_url);
+                                  desktop.mail(mailto);
+                              } catch(IOException e){
+                                  // Ignore
+                              } catch(URISyntaxException e){
+                                  // Ignore
+                              }
+                            }
+                        txtURL.setText(BEFORE_URL);
+                    } else if((url.contains(" ") || (!url.contains(".") && !url.equals("localhost"))) && !url.trim().startsWith("!")){
+                        if(url.trim().startsWith("~")){
+                            _url = _url.trim().substring(1);
+                        }
                         try{
-                            loadURL(SEARCH_ENGINE.replace("%s", URLEncoder.encode(url, "UTF-8")));
+                            loadURL(SEARCH_ENGINE.replace("%s", URLEncoder.encode(_url, "UTF-8")));
                         } catch(IOException e){
                             // Ignore
                         }
                     } else{
                         if(url.trim().startsWith("!")){
                             _url = _url.trim().substring(1);
+                        } else if(url.trim().startsWith("~")){
+                            _url = _url.trim().substring(1);
+                            try{
+                                _url = SEARCH_ENGINE.replace("%s", URLEncoder.encode(_url, "UTF-8"));
+                            } catch(IOException e){
+                                // Ignore
+                            }
                         }
                         String tmp = toURL(_url.trim());
          
@@ -318,7 +362,7 @@ public class SimpleSwingBrowser extends JFrame {
                         }
          
                         engine.load(tmp);
-                  }
+                    }
                 }
             }
         });
@@ -360,7 +404,7 @@ public class SimpleSwingBrowser extends JFrame {
         } else if(attrib.toLowerCase().equals("project")){
             browser.loadURL("http://crash0verrid3.github.io/Project-UTW/");
         } else if(attrib.toLowerCase().equals("welcome")){
-            engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser</h1>\n\n<p><a href=\"http://crash0verrid3.github.io/Project-UTW/\">View Project UTW on Github</a></p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just type \"<strong><em>get: tutorial</em></strong>\" into the URL bar.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
+            engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n<title>Project UTW</title>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser</h1>\n\n<p><a href=\"get: project\">View Project UTW on Github</a></p>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>For a tutorial on using this browser, just <a href=\"get: tutorial\">click here</a>.<strong><em><br /></em></strong></p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server\">web proxy</a></em>.</p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n</body>\n</html>\n");
         } else if(attrib.toLowerCase().equals("tutorial")){
             engine.loadContent("<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n<h1>Welcome to the Project UTW browser tutorial</h1>\n<p>Project UTW is an open-source browser written by <strong>Alex Anderson</strong> using only the Java programming language.</p>\n<p>This browser will never keep any permanant history from your browsing,</p>\n<p>and is designed for easy use with a <em><a href=\"https://en.wikipedia.org/wiki/Proxy_server#Types_of_proxy\">web proxy.</a></em></p>\n<p>&nbsp;</p>\n<p><em>To go back to the previous page or go forward a page, right-click the current page and click the</em></p>\n<p><em>corresponding option.</em></p>\n<p>&nbsp;</p>\n<p>At any time, you can type into the URL bar \"proxy: [proxy ip:port goes here]\"</p>\n<p>and the browser will use that proxy. Note, the proxy will not be saved for use</p>\n<p>after you close the browser. You can also type instead of the ip:port of the proxy:</p>\n<ul>\n<li>\"none\" - Restores the browser to not using a proxy</li>\n<li>\"default\" - Uses a preconfigured proxy server.</li>\n</ul>\n<p>To go to a website automatically after the proxy is set, type \"proxy: [proxy goes here] &gt; [website to go to]\".</p>\n<p>To get the current proxy, type \"get: proxy\" into the URL bar.</p>\n<p>When you type \"get: [whatever]\", it is called a <em>browser command</em>.&nbsp; Current browser</p>\n<p>commands include:</p>\n<ul>\n<li>\"proxy\" - Shows a popup telling you the currently used proxy server</li>\n<li>\"ip\" - Shows the IP that other websites see when you connect</li>\n<li>\"real ip\" - Shows you the IP websites will see when making STUN requests.<br />There should not be an actual IP shown. If there is no IP shown, you are safe<br />from websites peeking past your proxy.</li>\n<li>\"javascript\" - Tells you whether the browser supports javascript.</li>\n<li>\"iframes\" - Tells you whether the browser supports inline HTML frames</li>\n<li>\"welcome\" - Shows you the page you see when you first open the browser</li>\n<li>\"tutorial\" - Shows you this page</li>\n</ul>\n<p>&nbsp;</p>\n</body>\n</html>\n");
         } else{
@@ -674,6 +718,11 @@ public class SimpleSwingBrowser extends JFrame {
     }
     public static void restartApplication() throws URISyntaxException, IOException
     {
+      startApplication();
+      System.exit(0);
+    }
+    public static void startApplication() throws URISyntaxException, IOException
+    {
       final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
     
       /* is it a jar file? */
@@ -688,11 +737,34 @@ public class SimpleSwingBrowser extends JFrame {
     
       final ProcessBuilder builder = new ProcessBuilder(command);
       builder.start();
-      System.exit(0);
+    }
+    public static void startApplication(String[] args) throws URISyntaxException, IOException
+    {
+      final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+    
+      /* is it a jar file? */
+      if(!PATH.endsWith(".jar"))
+        return;
+    
+      /* Build command: java -jar application.jar */
+      final ArrayList<String> command = new ArrayList<String>();
+      command.add(javaBin);
+      command.add("-jar");
+      command.add(PATH);
+      for(int x=0; x<args.length; x++){
+          command.add(args[x]);
+      }
+    
+      final ProcessBuilder builder = new ProcessBuilder(command);
+      builder.start();
     }
     
 
     public static void main(String[] args) throws IOException, URISyntaxException{
+        SEARCH_ENGINES.put("duckduckgo", "https://duckduckgo.com/?q=%s");
+        SEARCH_ENGINES.put("google", "https://www.google.com/search?q=%s");
+        SEARCH_ENGINES.put("wikipedia", "https://en.wikipedia.org/w/index.php?searchInput=%s");
+        SEARCH_ENGINE = SEARCH_ENGINES.get("duckduckgo");
             URL url = new URL("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/version.txt.txt");
             try{
                 latestVersion = (new Scanner(url.openStream())).nextInt();
@@ -703,16 +775,32 @@ public class SimpleSwingBrowser extends JFrame {
                 update("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/JBrowser.jar");
             }
             loadPlugins();
+            String load = null;
+            if(args.length > 0){
+                    for(int x=0; x<args.length; x++){
+                        if(!args[x].startsWith("--")){
+                            if(load != null){
+                                startApplication(new String[]{args[x]});
+                            } else{
+                                load = args[x];
+                            }
+                        }
+                    }
+                }
+            final String urlToLoad = load;
+            load = null;
         SwingUtilities.invokeLater(new Runnable() {
             public void run(){
                 setProxy("none", false);
                 browser = new SimpleSwingBrowser();
                 browser.setVisible(true);
-                
-                String homepage = "get: Welcome";
-                browser.loadURL(homepage);
                 txtURL.setPlaceholder(" Search here to get started...");
-           }
+                if(urlToLoad == null){
+                    browser.loadURL(HOMEPAGE);
+                } else{
+                    browser.loadURL(urlToLoad);
+                }
+            }
         });
     }
 }
