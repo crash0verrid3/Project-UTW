@@ -53,13 +53,50 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static WebExtensions webExtensions = null;
     
-    public static final int ProjectUTW_VERSION = 2;
+    public static final int ProjectUTW_VERSION = 3;
     private static int latestVersion = -1;
     
+    public static final String PATH = getProgramPath();
+    private static ArrayList<String> pluginCode = new ArrayList<String>();    
  
     public SimpleSwingBrowser() {
         super();
         initComponents();
+    }
+    private static String readFile(String filename) throws IOException
+    {
+        String content = null;
+        File file = new File(filename); //for ex foo.txt
+        FileReader reader = null;
+        try{
+            reader = new FileReader(file);
+        } catch(FileNotFoundException e){
+            return "";
+        }
+        char[] chars = new char[(int) file.length()];
+        reader.read(chars);
+        content = new String(chars);
+        reader.close();
+        return content;
+    }
+    private static void loadPlugins(String path) throws IOException{
+        String[] plugins = null;
+        plugins = readFile(path + File.separator + "plugins.txt").split("<Plugin type=\"text/javascript\">");
+        for(int x=0; x<plugins.length; x++){
+            pluginCode.add(plugins[x]);
+        }
+    }
+    private static void loadPlugins() throws IOException{
+        loadPlugins(PATH.substring(0, PATH.lastIndexOf(File.separator)));
+    }
+    private static String getProgramPath(){
+        String path = null;
+        try{
+            path = new File(SimpleSwingBrowser.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
+        } catch(URISyntaxException e){
+            // Ignore
+        }
+        return path;
     }
     public void setCloseProcedure(){
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -180,6 +217,9 @@ public class SimpleSwingBrowser extends JFrame {
                             State oldState, State newState) {
                             if (newState == State.SUCCEEDED) {
                                 // A page loaded successfully
+                                for(int x=0; x<pluginCode.size(); x++){
+                                    engine.executeScript(pluginCode.get(x));
+                                }
                                 String html = (String) engine.executeScript("document.body.outerHTML");
                                 engine.executeScript("document.body.outerHTML = \"" + parseUTWScript(html).replace("\\", "\\\\").replace("\n", "\\n").replace("\"", "\\\"").replace("'", "\\'") + "\";");
                                 for(int x=0; x<execJS.size(); x++){
@@ -548,8 +588,6 @@ public class SimpleSwingBrowser extends JFrame {
         boolean parse = false;
         HashMap<String, String> vars = new HashMap<String, String>();
         HashMap<String, Boolean> systemVars = new HashMap<String, Boolean>();
-        vars.put(".system.IO.File.write", "@run fwrite &args");
-        systemVars.put("system.IO.File.write", true);
         String[] data;
         String command;
         String[] $args;
@@ -608,10 +646,7 @@ public class SimpleSwingBrowser extends JFrame {
     private static void update(String url) throws IOException, URISyntaxException{
         URL website = new URL(url);
         ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-        String path = SimpleSwingBrowser.class.getProtectionDomain()
-          .getCodeSource()
-          .getLocation()
-          .getPath().substring(1);
+        String path = PATH.substring(1);
         if(path.endsWith(".jar")){
             FileOutputStream fos = new FileOutputStream(path);
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
@@ -621,17 +656,16 @@ public class SimpleSwingBrowser extends JFrame {
     public static void restartApplication() throws URISyntaxException, IOException
     {
       final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
-      final File currentJar = new File(SimpleSwingBrowser.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     
       /* is it a jar file? */
-      if(!currentJar.getName().endsWith(".jar"))
+      if(!PATH.endsWith(".jar"))
         return;
     
       /* Build command: java -jar application.jar */
       final ArrayList<String> command = new ArrayList<String>();
       command.add(javaBin);
       command.add("-jar");
-      command.add(currentJar.getPath());
+      command.add(PATH);
     
       final ProcessBuilder builder = new ProcessBuilder(command);
       builder.start();
@@ -649,6 +683,7 @@ public class SimpleSwingBrowser extends JFrame {
             if(latestVersion > ProjectUTW_VERSION){
                 update("https://raw.githubusercontent.com/crash0verrid3/Project-UTW/master/JBrowser.jar");
             }
+            loadPlugins();
         SwingUtilities.invokeLater(new Runnable() {
             public void run(){
                 setProxy("none", false);
