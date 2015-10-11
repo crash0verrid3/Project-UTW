@@ -12,6 +12,7 @@ import javafx.concurrent.Worker.State;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.border.*;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -43,7 +44,7 @@ public class SimpleSwingBrowser extends JFrame {
 
 
     private final JButton btnGo = new JButton("Go");
-    private static final JTextField txtURL = new JTextField();
+    private static final PlaceholderTextField txtURL = new PlaceholderTextField();
     private final JProgressBar progressBar = new JProgressBar();
     
     private static SimpleSwingBrowser browser;
@@ -52,12 +53,13 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static WebExtensions webExtensions = null;
     
-    public static final int ProjectUTW_VERSION = 4;
+    public static final int ProjectUTW_VERSION = 5;
     private static int latestVersion = -1;
     
     public static final String PATH = getProgramPath();
     private static ArrayList<String> pluginCode = new ArrayList<String>();
     private static String _url;
+    private static final String SEARCH_ENGINE = "https://duckduckgo.com/?q=%s";
  
     public SimpleSwingBrowser() {
         super();
@@ -133,17 +135,18 @@ public class SimpleSwingBrowser extends JFrame {
  
         btnGo.addActionListener(al);
         txtURL.addActionListener(al);
+        txtURL.setDisabledTextColor(Color.GRAY);
   
         progressBar.setPreferredSize(new Dimension(150, 18));
         progressBar.setStringPainted(true);
   
         JPanel topBar = new JPanel(new BorderLayout(5, 0));
-        topBar.setBorder(BorderFactory.createEmptyBorder(3, 5, 3, 5));
+        topBar.setBorder(BorderFactory.createEmptyBorder(0, 2, 2, 2));
         topBar.add(txtURL, BorderLayout.CENTER);
         topBar.add(btnGo, BorderLayout.EAST);
  
         JPanel statusBar = new JPanel(new BorderLayout(5, 0));
-        statusBar.setBorder(BorderFactory.createEmptyBorder(3, 5, 3, 5));
+        statusBar.setBorder(BorderFactory.createEmptyBorder(2, 2, 5, 2));
         statusBar.add(lblStatus, BorderLayout.CENTER);
         statusBar.add(progressBar, BorderLayout.EAST);
  
@@ -151,7 +154,8 @@ public class SimpleSwingBrowser extends JFrame {
         panel.add(jfxPanel, BorderLayout.CENTER);
         panel.add(statusBar, BorderLayout.SOUTH);
         
-        getContentPane().add(panel);
+        Container c = getContentPane();
+        c.add(panel);
         
         setPreferredSize(new Dimension(1024, 600));
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -295,13 +299,21 @@ public class SimpleSwingBrowser extends JFrame {
                 } else if(url.startsWith("get:")){
                     getAttrib(url.substring(4).trim());
                 } else{
-                    String tmp = toURL(url);
-     
-                    if (tmp == null) {
-                        tmp = toURL("http://" + url);
+                    if(url.contains(" ") || (!url.contains(".") && !url.equals("localhost"))){
+                        try{
+                            loadURL(SEARCH_ENGINE.replace("%s", URLEncoder.encode(url, "UTF-8")));
+                        } catch(IOException e){
+                            // Ignore
+                        }
+                    } else{
+                        String tmp = toURL(url);
+         
+                        if (tmp == null) {
+                            tmp = toURL("http://" + url);
+                        }
+         
+                        engine.load(tmp);
                     }
-     
-                    engine.load(tmp);
                 }
             }
         });
@@ -694,6 +706,7 @@ public class SimpleSwingBrowser extends JFrame {
                 
                 String homepage = "get: Welcome";
                 browser.loadURL(homepage);
+                txtURL.setPlaceholder(" Search here to get started...");
            }
         });
     }
