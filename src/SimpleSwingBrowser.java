@@ -53,7 +53,7 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static WebExtensions webExtensions = null;
     
-    public static final int ProjectUTW_VERSION = 7;
+    public static final int ProjectUTW_VERSION = 8;
     private static int latestVersion = -1;
     
     public static final String PATH = getProgramPath();
@@ -134,8 +134,10 @@ public class SimpleSwingBrowser extends JFrame {
         };
  
         btnGo.addActionListener(al);
+        btnGo.setFont(new Font("Calibri", Font.BOLD, 14));
         txtURL.addActionListener(al);
         txtURL.setDisabledTextColor(Color.GRAY);
+        txtURL.setFont(new Font("Calibri", Font.BOLD, 18));
   
         progressBar.setPreferredSize(new Dimension(150, 18));
         progressBar.setStringPainted(true);
@@ -299,21 +301,24 @@ public class SimpleSwingBrowser extends JFrame {
                 } else if(url.startsWith("get:")){
                     getAttrib(url.substring(4).trim());
                 } else{
-                    if(url.contains(" ") || (!url.contains(".") && !url.equals("localhost"))){
+                    if((url.contains(" ") || (!url.contains(".") && !url.equals("localhost"))) && !url.trim().startsWith("!")){
                         try{
                             loadURL(SEARCH_ENGINE.replace("%s", URLEncoder.encode(url, "UTF-8")));
                         } catch(IOException e){
                             // Ignore
                         }
                     } else{
-                        String tmp = toURL(url);
+                        if(url.trim().startsWith("!")){
+                            _url = _url.trim().substring(1);
+                        }
+                        String tmp = toURL(_url.trim());
          
                         if (tmp == null) {
-                            tmp = toURL("http://" + url);
+                            tmp = toURL("http://" + _url);
                         }
          
                         engine.load(tmp);
-                    }
+                  }
                 }
             }
         });
