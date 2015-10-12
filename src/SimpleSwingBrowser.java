@@ -26,7 +26,7 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 10;
+    public static final int ProjectUTW_VERSION = 11;
     private static int latestVersion = -1;
  
     private final JFXPanel jfxPanel = new JFXPanel();
@@ -35,12 +35,17 @@ public class SimpleSwingBrowser extends JFrame {
     private static String[] proxy = new String[2];
  
     private final JPanel panel = new JPanel(new BorderLayout());
+    private final JPanel tabs = new JPanel(new BorderLayout());
     private final JLabel lblStatus = new JLabel();
-
+    
+    private JButton newTab = new JButton("New tab");
+    private JButton newWindow = new JButton("New window");
 
     private final JButton btnGo = new JButton("Go");
+    private JToolBar toolbar = new JToolBar();
     private static final PlaceholderTextField txtURL = new PlaceholderTextField();
     private final JProgressBar progressBar = new JProgressBar();
+    private static Font toolbarFont = new Font("Calibri", Font.BOLD, 13);
     
     private static SimpleSwingBrowser browser;
     
@@ -119,6 +124,7 @@ public class SimpleSwingBrowser extends JFrame {
     private void initComponents() {
         setCloseProcedure();
         createScene();
+        
  
         ActionListener al = new ActionListener() {
             @Override 
@@ -126,8 +132,26 @@ public class SimpleSwingBrowser extends JFrame {
                 loadURL(txtURL.getText());
             }
         };
- 
+        ActionListener newtab = new ActionListener() {
+            @Override 
+            public void actionPerformed(ActionEvent e) {
+                loadURL(txtURL.getText());
+            }
+        };
+        ActionListener newwindow = new ActionListener() {
+            @Override 
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    startApplication();
+                } catch(Throwable t){
+                    // Ignore
+                }
+            }
+        };
+        
+        newWindow.addActionListener(newwindow);
         btnGo.addActionListener(al);
+        
         btnGo.setFont(new Font("Calibri", Font.BOLD, 14));
         txtURL.addActionListener(al);
         txtURL.setDisabledTextColor(Color.GRAY);
@@ -140,15 +164,20 @@ public class SimpleSwingBrowser extends JFrame {
         topBar.setBorder(BorderFactory.createEmptyBorder(0, 2, 2, 2));
         topBar.add(txtURL, BorderLayout.CENTER);
         topBar.add(btnGo, BorderLayout.EAST);
+        
+        toolbar.add(newWindow);
+        newWindow.setFont(toolbarFont);
+        //toolbar.add(newTab);
+        newTab.setFont(toolbarFont);
  
         JPanel statusBar = new JPanel(new BorderLayout(5, 0));
         statusBar.setBorder(BorderFactory.createEmptyBorder(2, 2, 5, 2));
         statusBar.add(lblStatus, BorderLayout.CENTER);
         statusBar.add(progressBar, BorderLayout.EAST);
  
+        topBar.add(toolbar, BorderLayout.SOUTH);
         panel.add(topBar, BorderLayout.NORTH);
         panel.add(jfxPanel, BorderLayout.CENTER);
-        panel.add(statusBar, BorderLayout.SOUTH);
         
         Container c = getContentPane();
         c.add(panel);
