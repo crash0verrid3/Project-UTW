@@ -26,7 +26,7 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 9;
+    public static final int ProjectUTW_VERSION = 10;
     private static int latestVersion = -1;
  
     private final JFXPanel jfxPanel = new JFXPanel();
@@ -296,13 +296,7 @@ public class SimpleSwingBrowser extends JFrame {
                     } catch(java.lang.IndexOutOfBoundsException e){
                         url2 = "http://www.google.com/ncr";
                     }
-                    String tmp = toURL(url2);
-     
-                    if (tmp == null) {
-                        tmp = toURL("http://" + url2);
-                    }
-     
-                    engine.load(tmp);
+                    loadURL(url2);
                 } else if(url.startsWith("get:")){
                     getAttrib(url.substring(4).trim());
                 } else{
