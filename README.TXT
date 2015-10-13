@@ -36,6 +36,8 @@ Any changes must keep the credits to Alex Anderson in the source code and this R
 You may ONLY sell this program or take full credit for it given written permission from Alex Anderson. Alex Anderson is the ONLY individual who has permission to allow people to use any license except this.
 Any changes must keep the credits to Alex Anderson in the source code and this README. This includes changing the author that the end-user sees in the 'welcome' and 'tutorial' pages.
 You may ONLY sell this program or take full credit for it given written permission from Alex Anderson. Alex Anderson is the ONLY individual who has permission to allow people to use any license except this.
+Also, please note that any closed-source versions of this software MUST be modified to not use JxBrowser without first aquiring a license for closed-source use from their website (https://www.teamdev.com/jxbrowser) due to licensing purposes.
+For the source of a version that won't use JxBrowser, see src_no_JxBrowser/ within this repository.
 
 ------------------------------------------------------------------------------------------
 
