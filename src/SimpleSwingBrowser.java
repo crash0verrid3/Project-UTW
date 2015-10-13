@@ -26,7 +26,7 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 11;
+    public static final int ProjectUTW_VERSION = 12;
     private static int latestVersion = -1;
  
     private final JFXPanel jfxPanel = new JFXPanel();
@@ -178,6 +178,7 @@ public class SimpleSwingBrowser extends JFrame {
         topBar.add(toolbar, BorderLayout.SOUTH);
         panel.add(topBar, BorderLayout.NORTH);
         panel.add(jfxPanel, BorderLayout.CENTER);
+        panel.add(statusBar, BorderLayout.SOUTH);
         
         Container c = getContentPane();
         c.add(panel);
@@ -257,7 +258,7 @@ public class SimpleSwingBrowser extends JFrame {
                                 }
                                 org.w3c.dom.events.EventListener listener = new org.w3c.dom.events.EventListener() {
                                     public void handleEvent(org.w3c.dom.events.Event ev) {
-                                        String href = ((Element)ev.getTarget()).getAttribute("href");
+                                        String href = ((Element)ev.getTarget()).getAttribute("abs:href");
                                         loadURL(href);
                                     }
                                 };
@@ -358,7 +359,7 @@ public class SimpleSwingBrowser extends JFrame {
                               }
                             }
                         txtURL.setText(BEFORE_URL);
-                    } else if((url.contains(" ") || (!url.contains(".") && !url.equals("localhost"))) && !url.trim().startsWith("!")){
+                    } else if((url.contains(" ") || url.contains("\"") || url.contains("'") || (!url.contains(".") && !url.equals("localhost"))) && !url.trim().startsWith("!")){
                         if(url.trim().startsWith("~")){
                             _url = _url.trim().substring(1);
                         }
