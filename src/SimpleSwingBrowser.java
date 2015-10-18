@@ -26,7 +26,7 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 13;
+    public static final int ProjectUTW_VERSION = 14;
     private static int latestVersion = -1;
  
     private final JFXPanel jfxPanel = new JFXPanel();
