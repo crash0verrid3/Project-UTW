@@ -733,9 +733,8 @@ public class SimpleSwingBrowser extends JFrame {
     private static void update(String url) throws IOException, URISyntaxException{
         URL website = new URL(url);
         ReadableByteChannel rbc = Channels.newChannel(website.openStream());
-        String path = PATH.substring(1);
-        if(path.endsWith(".jar")){
-            FileOutputStream fos = new FileOutputStream(path);
+        if(PATH.endsWith(".jar")){
+            FileOutputStream fos = new FileOutputStream(PATH);
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
             restartApplication();
         }
