@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
-#include <cstddef>
 
 #define DEFAULT_EXE_FILE "JBrowser.jar"
 #define DEFAULT_JAVA_PATH "java"
