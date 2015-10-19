@@ -26,7 +26,7 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 16;
+    public static final int ProjectUTW_VERSION = 17;
     private static int latestVersion = -1;
  
     public static final String OS = System.getProperty("os.name");
@@ -811,12 +811,15 @@ public class SimpleSwingBrowser extends JFrame {
                             }
                         } else if(args[x].equals("--install")){
                             if(getOS().equals("linux")){
-                                Runtime r = Runtime.getRuntime();
                                 String arch = "32";
                                 if(System.getProperty("os.arch").contains("64")){
                                     arch = "64";
                                 }
-                                Process p = r.exec("cp ./launcher"+arch+"_linux /usr/bin/utw; chmod +x /usr/bin/utw");
+                                String cmd = "cp ./launcher"+arch+"_linux /usr/bin/utw; chmod +x /usr/bin/utw";
+                                System.out.println("Running command: '" + cmd + "'");
+                                /*
+                                Runtime r = Runtime.getRuntime();
+                                Process p = r.exec(cmd);
                                 p.waitFor();
                                 BufferedReader b = new BufferedReader(new InputStreamReader(p.getInputStream()));
                                 String line = "";
@@ -826,6 +829,7 @@ public class SimpleSwingBrowser extends JFrame {
                                 }
                                 
                                 b.close();
+                                */
                             }
                         }
                     }
