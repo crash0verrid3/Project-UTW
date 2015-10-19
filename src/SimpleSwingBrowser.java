@@ -26,9 +26,11 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 15;
+    public static final int ProjectUTW_VERSION = 16;
     private static int latestVersion = -1;
  
+    public static final String OS = System.getProperty("os.name");
+    
     private final JFXPanel jfxPanel = new JFXPanel();
     private static WebEngine engine;
     
@@ -783,7 +785,7 @@ public class SimpleSwingBrowser extends JFrame {
     }
     
 
-    public static void main(String[] args) throws IOException, URISyntaxException{
+    public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException{
         SEARCH_ENGINES.put("duckduckgo", "https://duckduckgo.com/?q=%s");
         SEARCH_ENGINES.put("google", "https://www.google.com/search?q=%s");
         SEARCH_ENGINES.put("wikipedia", "https://en.wikipedia.org/w/index.php?searchInput=%s");
@@ -807,6 +809,24 @@ public class SimpleSwingBrowser extends JFrame {
                             } else{
                                 load = args[x];
                             }
+                        } else if(args[x].equals("--install")){
+                            if(getOS().equals("linux")){
+                                Runtime r = Runtime.getRuntime();
+                                String arch = "32";
+                                if(System.getProperty("os.arch").contains("64")){
+                                    arch = "64";
+                                }
+                                Process p = r.exec("cp ./launcher"+arch+"_linux /usr/bin/utw; chmod +x /usr/bin/utw");
+                                p.waitFor();
+                                BufferedReader b = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                                String line = "";
+                                
+                                while ((line = b.readLine()) != null) {
+                                  System.out.println(line);
+                                }
+                                
+                                b.close();
+                            }
                         }
                     }
                 }
@@ -825,5 +845,34 @@ public class SimpleSwingBrowser extends JFrame {
                 }
             }
         });
+    }
+    
+    public static boolean isWindows() {
+        return (OS.indexOf("win") >= 0);
+    }
+
+    public static boolean isMac() {
+        return (OS.indexOf("mac") >= 0);
+    }
+
+    public static boolean isUnix() {
+        return (OS.indexOf("nix") >= 0 || OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0 );
+    }
+
+    public static boolean isSolaris() {
+        return (OS.indexOf("sunos") >= 0);
+    }
+    public static String getOS(){
+        if (isWindows()) {
+            return "windows";
+        } else if (isMac()) {
+            return "osx";
+        } else if (isUnix()) {
+            return "unix";
+        } else if (isSolaris()) {
+            return "solaris";
+        } else {
+            return "unknown";
+        }
     }
 }
