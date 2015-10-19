@@ -19,7 +19,7 @@ If [continue url] is not specified, it defaults to http://google.com
         - No proxy
     default
         - Default proxy server (46.216.1.99:3128 as of 10/7/2015)
-The proxy must be an HTTP proxy.
+The proxy must be an SOCKS proxy.
 
 This browser will not keep browsing history, but cannot prevent any websites you visit from tracking you.
 The proxy *should* keep you anonymous when browsing.

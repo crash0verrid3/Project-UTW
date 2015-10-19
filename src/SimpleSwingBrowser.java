@@ -26,7 +26,7 @@ import javax.activation.MimeType;
 import static javafx.concurrent.Worker.State.FAILED;
   
 public class SimpleSwingBrowser extends JFrame {
-    public static final int ProjectUTW_VERSION = 14;
+    public static final int ProjectUTW_VERSION = 15;
     private static int latestVersion = -1;
  
     private final JFXPanel jfxPanel = new JFXPanel();
@@ -405,7 +405,7 @@ public class SimpleSwingBrowser extends JFrame {
             if(proxy[0].equals("") && proxy[1].equals("")){
                 JOptionPane.showMessageDialog(null, "You are not using a proxy.");
             } else{
-                JOptionPane.showMessageDialog(null, "You are currently using the HTTP proxy "+proxy[0]+":"+proxy[1]);
+                JOptionPane.showMessageDialog(null, "You are currently using the SOCKS proxy "+proxy[0]+":"+proxy[1]);
             }
         } else if(attrib.toLowerCase().equals("ip")){
             try{
@@ -437,38 +437,38 @@ public class SimpleSwingBrowser extends JFrame {
     }
     
    private static void setProxy(String host, String port){
-       System.setProperty("http.proxyHost", host);
-       System.setProperty("http.proxyPort", port);
+       System.setProperty("socks.proxyHost", host);
+       System.setProperty("socks.proxyPort", port);
        proxy[0] = host;
        proxy[1] = port;
     }
     
    private static void setProxy(String host){
                 System.setProperty("java.net.useSystemProxies", "false");
-                System.setProperty("http.proxySet", "true");
+                System.setProperty("socks.proxySet", "true");
        try{
             System.setProperty("java.net.useSystemProxies", "false");
-            System.setProperty("http.proxySet", "true");
+            System.setProperty("socks.proxySet", "true");
             String[] h2 = host.split(":");
             String s1 = h2[0].trim();
             String s2 = h2[1].trim();
             setProxy(s1, s2);
-            JOptionPane.showMessageDialog(null, "You are now using the HTTP proxy "+s1+":"+s2);
+            JOptionPane.showMessageDialog(null, "You are now using the SOCKS proxy "+s1+":"+s2);
         } catch(java.lang.IndexOutOfBoundsException e){
             if(host.toLowerCase().equals("none")){
-                System.setProperty("http.proxySet", "false");
+                System.setProperty("socks.proxySet", "false");
                 System.setProperty("java.net.useSystemProxies", "false");
                 setProxy("", "");
                 JOptionPane.showMessageDialog(null, "You are not using any proxy.");
             }else if(host.toLowerCase().equals("default")){
                 System.setProperty("java.net.useSystemProxies", "false");
-                System.setProperty("http.proxySet", "true");
-                String h = "46.216.1.99";
-                String p = "3128";
+                System.setProperty("socks.proxySet", "true");
+                String h = "166.62.97.241";
+                String p = "18628";
                 setProxy(h, p);
-                JOptionPane.showMessageDialog(null, "You are using the HTTP proxy "+h+":"+p);
+                JOptionPane.showMessageDialog(null, "You are using the SOCKS proxy "+h+":"+p);
             } else if(host.toLowerCase().equals("system")){
-                System.setProperty("http.proxySet", "false");
+                System.setProperty("socks.proxySet", "false");
                 System.setProperty("java.net.useSystemProxies", "true");
             } else{
                 JOptionPane.showMessageDialog(null, "The proxy you entered was invalid!");
@@ -478,20 +478,20 @@ public class SimpleSwingBrowser extends JFrame {
     
     private static void setProxy(String host, boolean showMessages){
        System.setProperty("java.net.useSystemProxies", "false");
-       System.setProperty("http.proxySet", "true");
+       System.setProperty("socks.proxySet", "true");
        try{
             System.setProperty("java.net.useSystemProxies", "false");
-            System.setProperty("http.proxySet", "true");
+            System.setProperty("socks.proxySet", "true");
             String[] h2 = host.split(":");
             String s1 = h2[0].trim();
             String s2 = h2[1].trim();
             setProxy(s1, s2);
             if(showMessages){
-                JOptionPane.showMessageDialog(null, "You are now using the HTTP proxy "+s1+":"+s2);
+                JOptionPane.showMessageDialog(null, "You are now using the SOCKS proxy "+s1+":"+s2);
             }
         } catch(java.lang.IndexOutOfBoundsException e){
             if(host.toLowerCase().equals("none")){
-                System.setProperty("http.proxySet", "false");
+                System.setProperty("socks.proxySet", "false");
                 System.setProperty("java.net.useSystemProxies", "false");
                 setProxy("", "");
                 if(showMessages){
@@ -499,15 +499,15 @@ public class SimpleSwingBrowser extends JFrame {
                 }
             }else if(host.toLowerCase().equals("default")){
                 System.setProperty("java.net.useSystemProxies", "false");
-                System.setProperty("http.proxySet", "true");
+                System.setProperty("socks.proxySet", "true");
                 String h = "46.216.1.99";
                 String p = "3128";
                 setProxy(h, p);
                 if(showMessages){
-                    JOptionPane.showMessageDialog(null, "You are using the HTTP proxy "+h+":"+p);
+                    JOptionPane.showMessageDialog(null, "You are using the SOCKS proxy "+h+":"+p);
                 }
             } else if(host.toLowerCase().equals("system")){
-                System.setProperty("http.proxySet", "false");
+                System.setProperty("socks.proxySet", "false");
                 System.setProperty("java.net.useSystemProxies", "true");
             } else{
                 if(showMessages){
